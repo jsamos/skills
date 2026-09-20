@@ -1,30 +1,25 @@
 # extract-audio
 
-Pull the audio track out of a video file using ffmpeg in Docker.
-
-This directory is the source of truth (`~/.agents/skills/extract-audio`). `~/code/containers/extract-audio` is a symlink to it.
+Pull the audio track out of a video file using ffmpeg in Docker. You do not need ffmpeg installed on the host.
 
 ## Requirements
 
-- Docker Desktop (the script starts it if it is not running)
-- macOS
-
-You do not need ffmpeg on your Mac, and you do not need this command on your PATH.
+- [Docker](https://docs.docker.com/get-docker/), running
 
 ## Usage
 
-Run the script from any directory. Pass a relative or absolute path to the video.
+From this directory, run `scripts/extract-audio` with a relative or absolute path to a video. It can be invoked from any working directory.
 
 ```bash
-~/.agents/skills/extract-audio/scripts/extract-audio lecture.mov
+./scripts/extract-audio lecture.mov
 ```
 
 That writes `lecture.mp3` next to the video.
 
 ```bash
-~/.agents/skills/extract-audio/scripts/extract-audio ~/Downloads/clip.mp4 soundtrack.wav
-~/.agents/skills/extract-audio/scripts/extract-audio clip.mp4 -f flac
-~/.agents/skills/extract-audio/scripts/extract-audio clip.mp4 --split
+./scripts/extract-audio ~/Downloads/clip.mp4 soundtrack.wav
+./scripts/extract-audio clip.mp4 -f flac
+./scripts/extract-audio clip.mp4 --split
 ```
 
 `--split` also writes a copy of the video with the audio removed, e.g. `clip.silent.mp4`.
@@ -42,21 +37,43 @@ If the Docker image is missing, the script builds it first.
 
 `copy` keeps the original audio codec and picks a matching extension (for example `.m4a` for AAC).
 
-## Rebuild the image
+## Use as an agent skill
 
-Usually unnecessary. To rebuild explicitly:
+This directory is an agent skill: `SKILL.md` tells an agent how to run the bundled script.
+
+Install it by copying or cloning this folder into your skills directory, keeping the folder name `extract-audio`:
 
 ```bash
-~/.agents/skills/extract-audio/scripts/install.sh
+git clone <this-repo-url> ~/.agents/skills/extract-audio
+```
+
+Other common locations:
+
+- `~/.agents/skills/extract-audio`
+- `~/.cursor/skills/extract-audio` (Cursor, all projects)
+- `.cursor/skills/extract-audio` (Cursor, this project only)
+
+Then ask in natural language, for example:
+
+- Extract the audio from `lecture.mov`
+- Make a wav of `~/Downloads/clip.mp4`
+- Split `clip.mp4` into audio and a silent video
+
+## Rebuild the image
+
+To rebuild the image:
+
+```bash
+./scripts/install.sh
 ```
 
 ## Layout
 
 ```
-extract-audio/
-  Dockerfile              # Alpine + ffmpeg
-  SKILL.md                # Instructions for agents
-  scripts/extract-audio   # Command you run
-  scripts/extract.sh      # Runs inside the container
-  scripts/install.sh      # Optional image rebuild
+.
+├── Dockerfile              # Alpine + ffmpeg
+├── SKILL.md                # Instructions for agents
+├── scripts/extract-audio   # Command you or an agent run
+├── scripts/extract.sh      # Runs inside the container
+└── scripts/install.sh      # Optional image rebuild
 ```

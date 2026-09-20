@@ -46,19 +46,7 @@ ensure_docker() {
     return 0
   fi
 
-  echo "extract-audio: Docker is not running; starting Docker Desktop..." >&2
-  open -a Docker || die "could not start Docker Desktop"
-
-  i=0
-  while [ "$i" -lt 60 ]; do
-    sleep 2
-    if docker info >/dev/null 2>&1; then
-      return 0
-    fi
-    i=$((i + 1))
-  done
-
-  die "docker did not become ready after starting Docker Desktop"
+  die "docker is not running"
 }
 
 ensure_image() {

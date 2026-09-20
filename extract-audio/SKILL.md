@@ -7,7 +7,7 @@ description: Extract audio from video files with the extract-audio Docker CLI bu
 
 This skill is self-contained. Run `scripts/extract-audio` from this skill directory. Do not call ffmpeg or `docker run` directly, and do not install the CLI onto PATH.
 
-The script starts Docker Desktop if needed, waits until the daemon is ready, and builds `extract-audio:latest` from this skill if the image is missing.
+The script checks that Docker is running and builds `extract-audio:latest` from this skill if the image is missing. If Docker is not installed or not running, it exits with an error.
 
 ## Command
 
