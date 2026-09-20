@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+IMAGE="${EXTRACT_AUDIO_IMAGE:-extract-audio:latest}"
+
+usage() {
+  cat <<'EOF'
+Usage: extract-audio [options] <video> [output]
+
+Extract audio from a video file.
+
+Options:
+  -f, --format FORMAT   mp3 (default), wav, flac, aac, m4a, ogg, copy
+  -o, --output PATH     Output audio file
+  --split               Also write a video copy with audio removed
+  -h, --help            Show this help
+
+Examples:
+  extract-audio lecture.mov
+  extract-audio ~/Downloads/clip.mp4 soundtrack.wav
+  extract-audio clip.mp4 -f flac
+  extract-audio clip.mp4 --split
+EOF
+}
+
+die() {
+  echo "extract-audio: $1" >&2
+  exit 1
+}
+
+abspath() {
+  local path="$1"
+  local dir
+  dir="$(cd "$(dirname "$path")" && pwd)"
+  printf '%s/%s\n' "$dir" "$(basename "$path")"
+}
+
+ensure_docker() {
+  if ! command -v docker >/dev/null 2>&1; then
+    die "docker is not installed"
+  fi
+
+  if docker info >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "extract-audio: Docker is not running; starting Docker Desktop..." >&2
+  open -a Docker || die "could not start Docker Desktop"
+
+  i=0
+  while [ "$i" -lt 60 ]; do
+    sleep 2
+    if docker info >/dev/null 2>&1; then
+      return 0
+    fi
+    i=$((i + 1))
+  done
+
+  die "docker did not become ready after starting Docker Desktop"
+}
+
+ensure_image() {
+  if docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo "extract-audio: building $IMAGE..." >&2
+  docker build -t "$IMAGE" "$SKILL_DIR"
+}
+
+INPUT=""
+OUTPUT=""
+PASSTHRU=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -f|--format)
+      [ $# -ge 2 ] || die "missing value for $1"
+      PASSTHRU+=("$1" "$2")
+      shift 2
+      ;;
+    -o|--output)
+      [ $# -ge 2 ] || die "missing value for $1"
+      OUTPUT="$2"
+      shift 2
+      ;;
+    --split)
+      PASSTHRU+=("$1")
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die "unknown option: $1"
+      ;;
+    *)
+      if [ -z "$INPUT" ]; then
+        INPUT="$1"
+      elif [ -z "$OUTPUT" ]; then
+        OUTPUT="$1"
+      else
+        die "unexpected argument: $1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+[ -n "$INPUT" ] || { usage >&2; exit 1; }
+[ -f "$INPUT" ] || die "file not found: $INPUT"
+
+ensure_docker
+ensure_image
+
+INPUT_ABS="$(abspath "$INPUT")"
+INPUT_DIR="$(dirname "$INPUT_ABS")"
+OUTPUT_DIR="$INPUT_DIR"
+
+if [ -n "$OUTPUT" ]; then
+  OUTPUT_PARENT="$(dirname "$OUTPUT")"
+  mkdir -p "$OUTPUT_PARENT"
+  OUTPUT_ABS="$(abspath "$OUTPUT")"
+  OUTPUT_DIR="$(dirname "$OUTPUT_ABS")"
+fi
+
+DOCKER_ARGS=(
+  run --rm
+  -e "HOST_INPUT_DIR=$INPUT_DIR"
+  -e "HOST_OUTPUT_DIR=$OUTPUT_DIR"
+  -v "$INPUT_DIR:/in"
+)
+
+if [ "$OUTPUT_DIR" = "$INPUT_DIR" ]; then
+  CONTAINER_INPUT="/in/$(basename "$INPUT_ABS")"
+  CONTAINER_OUTPUT=""
+  if [ -n "${OUTPUT_ABS:-}" ]; then
+    CONTAINER_OUTPUT="/in/$(basename "$OUTPUT_ABS")"
+  fi
+else
+  DOCKER_ARGS+=(-v "$OUTPUT_DIR:/out")
+  CONTAINER_INPUT="/in/$(basename "$INPUT_ABS")"
+  CONTAINER_OUTPUT="/out/$(basename "$OUTPUT_ABS")"
+fi
+
+CMD=("${DOCKER_ARGS[@]}" "$IMAGE")
+CMD+=("${PASSTHRU[@]+"${PASSTHRU[@]}"}")
+CMD+=("$CONTAINER_INPUT")
+if [ -n "${CONTAINER_OUTPUT:-}" ]; then
+  CMD+=("$CONTAINER_OUTPUT")
+fi
+
+exec docker "${CMD[@]}"
