@@ -50,10 +50,10 @@ scripts/unlink.sh <skill-name> [project-dir]
 
 `link` resolves `me/<name>` first, then `vendor/<name>`.
 
-If the skill is missing from both, the command fails. Do not search or suggest remote skills.
+If there is no exact match, the link script fails. An agent following `SKILL.md` should list `me/` and `vendor/`, suggest close local names, and ask before linking. Do not search or suggest remote skills.
 
 `unlink` removes only the project symlink. It never deletes anything under `me/` or `vendor/`.
 
 ## Agent skill
 
-`SKILL.md` tells an agent how to run these scripts. Keep this folder at `me/skill-link` in the library.
+`SKILL.md` tells an agent how to run these scripts and how to handle missing names. Keep this folder at `me/skill-link` in the library.
