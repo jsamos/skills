@@ -1,59 +1,40 @@
 # skill-link
 
-Manage a local skills library and activate skills in projects via symlinks.
+Manage a skills library and activate skills in a project via symlinks.
 
-The skill name and the link command are both `skill-link`.
+## What it manages
 
-## Model
+| Place | Role |
+| --- | --- |
+| Library (`me/` + `vendor/`) | Where skill sources live. `me/` is yours; `vendor/` is third-party. |
+| Staging (`~/.agents/skills`) | Temporary land from `npx skills add`. |
+| Project (`.agents/skills`) | Symlinks so the agent in that project can see a skill. |
 
-| Place | Path | Role |
-| --- | --- | --- |
-| Library | configured via setup | Source of truth: `me/` (owned) and `vendor/` (third-party) |
-| Staging | `~/.agents/skills/<name>` | Temporary land from `npx skills add` |
-| Project | `<project>/.agents/skills/<name>` | Symlink so an agent in that project can use the skill |
+## How to use it
 
-Flow: `npx skills add` → move into `vendor/` → link into a project. Owned skills in `me/` skip move and only need link.
+Once, give your library root (the folder that contains `me/`):
 
-## One-time setup
+- “Set up skill-link with library `/path/to/skills`”
 
-You must pass the library root (the directory that contains `me/`):
+Then:
 
-```bash
-./me/skill-link/scripts/setup.sh /path/to/skills
-```
+- “Link `extract-audio` into this project”
+- “Move `find-skills` into vendor, then link it”
+- “Unlink `extract-audio` from this project”
 
-This writes `library-root` inside this skill directory (gitignored absolute path) and creates `vendor/`. It does not install anything onto `PATH`.
+If a name isn’t exact, the skill suggests close matches from `me/` / `vendor/`.
 
-## Commands
+### Typical flows
 
-Run scripts from this skill’s `scripts/` directory:
+**Owned skill (already in `me/`):** link it into the project.
 
-```bash
-scripts/setup.sh <workspace-root>
-scripts/move.sh <skill-name>
-scripts/link.sh <skill-name> [project-dir]
-scripts/unlink.sh <skill-name> [project-dir]
-```
+**Skill from npx:** `npx skills add …`, then move it into `vendor/` and link it.
 
-`project-dir` defaults to the current working directory.
+### Unlink
 
-### Examples
+Unlink only removes the project symlink. It does not delete anything under `me/` or `vendor/`.
 
-```bash
-./scripts/setup.sh /path/to/skills
-./scripts/move.sh find-skills
-./scripts/link.sh find-skills
-./scripts/link.sh extract-audio
-./scripts/link.sh extract-audio /path/to/some-app
-./scripts/unlink.sh extract-audio
-```
+## Notes
 
-`link` resolves `me/<name>` first, then `vendor/<name>`.
-
-If there is no exact match, the link script fails. An agent following `SKILL.md` should list `me/` and `vendor/`, suggest close local names, and ask before linking. Do not search or suggest remote skills.
-
-`unlink` removes only the project symlink. It never deletes anything under `me/` or `vendor/`.
-
-## Agent skill
-
-`SKILL.md` tells an agent how to run these scripts and how to handle missing names. Keep this folder at `me/skill-link` in the library.
+- Prefer project-local `.agents/skills` links over leaving skills installed globally.
+- Link resolves `me/<name>` first, then `vendor/<name>`.
