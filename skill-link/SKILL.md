@@ -46,9 +46,9 @@ Resolution for link: prefer `me/<name>`, else `vendor/<name>`.
 
 ## Missing skills
 
-If a skill is not in `me/` or `vendor/`, stop. Tell the user it is not in the library. Do nothing else.
+If there is no exact match in `me/` or `vendor/`, list the skill directories in those two places and suggest close local names (substring or similar spelling). Ask which to link, if any. Do not link a suggestion without confirmation.
 
-Never search skills.sh, never suggest remote packages, never run `npx skills find` / `npx skills add`, never compare install counts, and never offer alternatives. This skill only links, moves, unlinks, or sets up what already exists locally (or what the user explicitly asked to move from `~/.agents/skills`).
+Never search skills.sh, never suggest remote packages, never run `npx skills find` / `npx skills add`, and never compare install counts. Suggestions must come only from the local library.
 
 ## Typical flow
 
