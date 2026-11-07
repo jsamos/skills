@@ -78,6 +78,7 @@ cd .cursor/skills/youtube-transcript && node dist/get_transcript.js "VIDEO_URL_O
 - `https://www.youtube.com/watch?v=VIDEO_ID`
 - `https://youtu.be/VIDEO_ID`
 - `https://youtube.com/embed/VIDEO_ID`
+- `https://www.youtube.com/shorts/VIDEO_ID`
 - Raw video ID (11 characters)
 
 ## Output
