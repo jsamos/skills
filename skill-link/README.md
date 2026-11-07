@@ -50,6 +50,8 @@ scripts/unlink.sh <skill-name> [project-dir]
 
 `link` resolves `me/<name>` first, then `vendor/<name>`.
 
+If the skill is missing from both, the command fails. Do not search or suggest remote skills.
+
 `unlink` removes only the project symlink. It never deletes anything under `me/` or `vendor/`.
 
 ## Agent skill

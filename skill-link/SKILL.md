@@ -44,6 +44,12 @@ Agent shorthand (same operations): `skill-setup`, `skill-move`, `skill-link`, `s
 
 Resolution for link: prefer `me/<name>`, else `vendor/<name>`.
 
+## Missing skills
+
+If a skill is not in `me/` or `vendor/`, stop. Tell the user it is not in the library. Do nothing else.
+
+Never search skills.sh, never suggest remote packages, never run `npx skills find` / `npx skills add`, never compare install counts, and never offer alternatives. This skill only links, moves, unlinks, or sets up what already exists locally (or what the user explicitly asked to move from `~/.agents/skills`).
+
 ## Typical flow
 
 ```bash
